@@ -295,9 +295,55 @@ static void explorar(Sala* raiz, NoPista** arvPistas) {
             [Biblioteca]       [Cozinha]
               /     \            /     \
        [Escritorio][Sotao] [Despensa] [Porão]
-
 */
 
 int main(void) {
     NoPista* arvPistas = NULL;
-    memset(HT, 0,
+    memset(HT, 0, sizeof(HT));
+
+    /* Suspeitos usados no cenário (arranjos de ponteiros const) */
+    static const char* SUS_MORDOMO[]   = {"Mordomo"};
+    static const char* SUS_JARDINEIRO[] = {"Jardineiro"};
+    static const char* SUS_SOBRINHO[]  = {"Sobrinho"};
+    static const char* SUS_COZINHEIRA[] = {"Cozinheira"};
+    static const char* SUS_DUPLO[]     = {"Mordomo", "Sobrinho"};
+
+    /* Criar salas (nome, pista opcional, lista suspeitos, qtd) */
+    Sala* hall        = criar_sala("Hall de Entrada", NULL, NULL, 0);
+    Sala* biblioteca  = criar_sala("Biblioteca", "Anotacoes rasgadas falando sobre dividas", SUS_SOBRINHO, 1);
+    Sala* cozinha     = criar_sala("Cozinha", "Faca faltando do suporte", SUS_COZINHEIRA, 1);
+    Sala* escritorio  = criar_sala("Escritorio", "Cofre arrombado com marcas de alavanca", SUS_MORDOMO, 1);
+    Sala* sotao       = criar_sala("Sotao", "Luvas com manchas escuras recentes", SUS_JARDINEIRO, 1);
+    Sala* despensa    = criar_sala("Despensa", "Rastro de farinha ate a porta dos fundos", SUS_COZINHEIRA, 1);
+    Sala* porao       = criar_sala("Porao", "Chave mestra escondida atras de canos", SUS_DUPLO, 2);
+
+    /* Conectar árvore */
+    conectar(hall, biblioteca, cozinha);
+    conectar(biblioteca, escritorio, sotao);
+    conectar(cozinha, despensa, porao);
+
+    /* Explorar */
+    explorar(hall, &arvPistas);
+
+    /* Relatório final */
+    printf("\n===== Relatorio Final =====\n");
+    if (arvPistas) {
+        printf("Pistas coletadas:\n");
+        bst_em_ordem(arvPistas);
+    } else {
+        printf("Nenhuma pista foi coletada.\n");
+    }
+    Suspeito* top = hash_suspeito_top();
+    if (top && top->contador > 0) {
+        printf("Suspeito mais provavel: %s (citacoes: %d)\n", top->nome, top->contador);
+    } else {
+        printf("Sem suspeito predominante.\n");
+    }
+
+    /* Limpeza */
+    destruir_mapa(hall);
+    bst_destruir(arvPistas);
+    hash_destruir();
+
+    return 0;
+}
